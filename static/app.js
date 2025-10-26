@@ -5,6 +5,10 @@ const statusBadge = $("#statusBadge");
 const logEl = $("#log");
 const pctEl = $("#progressPct");
 const pctTxt = $("#progressText");
+const fileBrowserModal = $("#fileBrowserModal");
+const fileBrowser = $("#fileBrowser");
+
+let currentPath = "/";
 
 function setRunning(running) {
   statusBadge.textContent = running ? "Running" : "Idle";
@@ -99,9 +103,62 @@ async function stopDownload() {
   // status will switch to idle when process exits; keep button enabled meanwhile
 }
 
-async function listPaths() {
+async function openFileBrowser() {
+  fileBrowserModal.style.display = "flex";
   const r = await fetch("/api/list_destinations").then(r=>r.json());
-  $("#pathsHint").textContent = r.paths.slice(0, 12).join("  •  ");
+  browseTo(r.paths[0] || "/");
+}
+
+function closeFileBrowser() {
+  fileBrowserModal.style.display = "none";
+}
+
+async function browseTo(path) {
+  const r = await fetch(`/api/browse?path=${encodeURIComponent(path)}`).then(r=>r.json());
+  if (r.error) {
+    alert(r.error);
+    return;
+  }
+  currentPath = r.path;
+  fileBrowser.innerHTML = "";
+  const ul = document.createElement("ul");
+  if (currentPath !== "/") {
+    const parent = document.createElement("li");
+    parent.textContent = "..";
+    parent.onclick = () => browseTo(currentPath.substring(0, currentPath.lastIndexOf("/")) || "/");
+    ul.appendChild(parent);
+  }
+  r.items.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item.name;
+    li.dataset.path = item.path;
+    if (item.is_dir) {
+      li.classList.add("dir");
+      li.onclick = () => browseTo(item.path);
+    } else {
+      li.classList.add("file");
+    }
+    li.onclick = () => {
+      if (item.is_dir) {
+        browseTo(item.path);
+      } else {
+        $all("#fileBrowser li").forEach(el => el.classList.remove("selected"));
+        li.classList.add("selected");
+      }
+    };
+    ul.appendChild(li);
+  });
+  fileBrowser.appendChild(ul);
+}
+
+function selectPath() {
+  const selected = $("#fileBrowser li.selected");
+  if (selected) {
+    $("#destination_dir").value = selected.dataset.path;
+  } else {
+    $("#destination_dir").value = currentPath;
+  }
+  closeFileBrowser();
 }
 
 async function lsblk() {
@@ -130,7 +187,9 @@ function bind() {
   $("#btnStart").onclick = () => startDownload(false);
   $("#btnRunRaw").onclick = () => startDownload(true);
   $("#btnStop").onclick = stopDownload;
-  $("#btnBrowsePaths").onclick = listPaths;
+  $("#btnBrowsePaths").onclick = openFileBrowser;
+  $("#closeModal").onclick = closeFileBrowser;
+  $("#selectPath").onclick = selectPath;
   $("#btnLsblk").onclick = lsblk;
   $("#btnDf").onclick = df;
   $("#btnMount").onclick = mount;

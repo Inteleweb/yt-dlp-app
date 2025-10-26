@@ -186,7 +186,7 @@ def api_stop():
         if p is None:
             return jsonify({"status": "idle"})
         try:
-            os.killpg(os.getpgid(p.pid), signal.SIGINT)
+            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
         except ProcessLookupError:
             pass
     return jsonify({"status": "stopping"})
