@@ -13,12 +13,13 @@
 </header>
 
 <main>
-  <section class="card">
-    <h2>Input</h2>
-    <div class="row">
+  <section class="hero-card">
+    <div class="url-input-container">
       <input id="url" type="url" placeholder="Paste video URL…" autocomplete="on"/>
-      <button id="btnStart">Download</button>
-      <button id="btnStop" class="secondary">Cancel</button>
+      <div class="button-group">
+        <button id="btnStart">Download</button>
+        <button id="btnStop" class="secondary">Cancel</button>
+      </div>
     </div>
   </section>
 
@@ -26,21 +27,22 @@
     <summary>Core Options</summary>
     <div class="grid">
       <div class="field">
-        <label>Destination <span class="info" title="Base folder for downloads. Defaults to a USB mount if present.">i</span></label>
+        <label>Output Directory <span class="info" title="The directory where the downloaded files will be saved. You can use the 'Browse' button to select a directory.">i</span></label>
         <div class="row">
           <input id="destination_dir" placeholder="/media/usb…"/>
-          <button id="btnBrowsePaths" class="secondary">Suggest</button>
+          <button id="btnBrowsePaths" class="secondary">Browse</button>
         </div>
         <small id="pathsHint"></small>
       </div>
 
       <div class="field">
-        <label>Output template <span class="info" title='Example: /media/usb/%(uploader)s/%(title)s.%(ext)s'>i</span></label>
-        <input id="output_template" placeholder='%(uploader)s/%(title)s.%(ext)s'/>
+        <label>Output Filename <span class="info" title="The name of the downloaded file. You can use yt-dlp variables to customize the filename. See the yt-dlp documentation for a full list of available variables.">i</span></label>
+        <input id="output_filename" placeholder="%(uploader)s/%(title)s.%(ext)s"/>
+        <small>Variables: %(title)s, %(uploader)s, %(upload_date)s, %(ext)s, etc.</small>
       </div>
 
       <div class="field">
-        <label>Archive log <span class="info" title="Avoid re-downloading. Same file path is reused.">i</span></label>
+        <label>Archive log <span class="info" title="A file that keeps track of downloaded videos to avoid re-downloading them. Provide a path to a text file.">i</span></label>
         <input id="archive_path" placeholder="/mnt/usb/archive_log.txt"/>
       </div>
     </div>
@@ -55,7 +57,7 @@
 
     <div id="presetBox" class="grid">
       <div class="field">
-        <label>Download type <span class="info" title="Choose audio, video, or both merged.">i</span></label>
+        <label>Download type <span class="info" title="Choose whether to download video and audio, only video, or only audio.">i</span></label>
         <select id="dl_kind">
           <option value="video_audio">Video + Audio</option>
           <option value="video">Video only</option>
@@ -63,8 +65,8 @@
         </select>
       </div>
       <div class="field">
-        <label>Max height ≤ <span class="info" title="Limit resolution. Leave blank for best.">i</span></label>
-        <input id="max_height" type="number" inputmode="numeric" placeholder="720"/>
+        <label>Max height ≤ <span class="info" title="Limit the vertical resolution of the video. For example, 1080 for 1080p video.">i</span></label>
+        <input id="max_height" type="number" inputmode="numeric" placeholder="1080"/>
       </div>
       <div class="example">
         Example produced: <code id="fmtExample">bestvideo+bestaudio/best</code>
@@ -72,8 +74,8 @@
     </div>
 
     <div id="customBox" class="field" style="display:none">
-      <label>-f custom <span class="info" title="Directly pass a yt-dlp format selector.">i</span></label>
-      <input id="custom_format" placeholder="bestvideo*[height<=720]+bestaudio/best[height<=720]/best"/>
+      <label>-f custom <span class="info" title="Directly pass a yt-dlp format selector. This gives you full control over the format selection.">i</span></label>
+      <input id="custom_format" placeholder="bestvideo*[height<=1080]+bestaudio/best[height<=1080]/best"/>
     </div>
   </details>
 
@@ -81,15 +83,15 @@
     <summary>Rate & Sleep</summary>
     <div class="grid">
       <div class="field">
-        <label>--limit-rate <span class="info" title="e.g. 10000k or 2M">i</span></label>
+        <label>--limit-rate <span class="info" title="Limit the download speed, e.g., 10000k or 2M.">i</span></label>
         <input id="limit_rate" placeholder="10000k"/>
       </div>
       <div class="field">
-        <label>--sleep-interval (s)</label>
+        <label>--sleep-interval (s) <span class="info" title="The number of seconds to wait before each download.">i</span></label>
         <input id="sleep_interval" type="number" inputmode="numeric" placeholder="0"/>
       </div>
       <div class="field">
-        <label>--max-sleep-interval (s)</label>
+        <label>--max-sleep-interval (s) <span class="info" title="The maximum number of seconds to wait between downloads.">i</span></label>
         <input id="max_sleep_interval" type="number" inputmode="numeric" placeholder="0"/>
       </div>
     </div>
@@ -98,57 +100,50 @@
   <details class="card">
     <summary>Flags</summary>
     <div class="flags">
-      <!-- Error/Resumption -->
-      <label><input class="flag" type="checkbox" value="--no-abort-on-error"> --no-abort-on-error</label>
-      <label><input class="flag" type="checkbox" value="--skip-unavailable-fragments"> --skip-unavailable-fragments</label>
-      <label><input class="flag" type="checkbox" value="--continue"> --continue</label>
-
-      <!-- Filenames -->
-      <label><input class="flag" type="checkbox" value="--restrict-filenames"> --restrict-filenames</label>
-      <label><input class="flag" type="checkbox" value="--windows-filenames"> --windows-filenames</label>
-
-      <!-- Metadata -->
-      <label><input class="flag" type="checkbox" value="--embed-thumbnail"> --embed-thumbnail</label>
-      <label><input class="flag" type="checkbox" value="--embed-metadata"> --embed-metadata</label>
-      <label><input class="flag" type="checkbox" value="--embed-chapters"> --embed-chapters</label>
-      <label><input class="flag" type="checkbox" value="--write-description"> --write-description</label>
-      <label><input class="flag" type="checkbox" value="--write-info-json"> --write-info-json</label>
-      <label><input class="flag" type="checkbox" value="--no-clean-info-json"> --no-clean-info-json</label>
-      <label><input class="flag" type="checkbox" value="--write-subs"> --write-subs</label>
-
-      <!-- Listing/Simulation -->
-      <label><input class="flag" type="checkbox" value="--no-simulate"> --no-simulate</label>
-      <label><input class="flag" type="checkbox" value="--no-ignore-no-formats-error"> --no-ignore-no-formats-error</label>
-      <label><input class="flag" type="checkbox" value="--list-formats"> --list-formats</label>
-      <label><input class="flag" type="checkbox" value="--list-subs"> --list-subs</label>
-
-      <!-- Progress/Title -->
-      <label><input class="flag" type="checkbox" value="--progress" checked> --progress</label>
-      <label><input class="flag" type="checkbox" value="--console-title"> --console-title</label>
-      <label><input class="flag" type="checkbox" value="--no-keep-fragments"> --no-keep-fragments</label>
+      <label><input class="flag" type="checkbox" value="--no-abort-on-error"> --no-abort-on-error <span class="info" title="Continue downloading other videos in a playlist if one fails.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--skip-unavailable-fragments"> --skip-unavailable-fragments <span class="info" title="Skip unavailable fragments of a video.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--continue"> --continue <span class="info" title="Resume partially downloaded files.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--restrict-filenames" checked> --restrict-filenames <span class="info" title="Restrict filenames to only ASCII characters.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--windows-filenames"> --windows-filenames <span class="info" title="Make filenames compatible with Windows.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--embed-thumbnail" checked> --embed-thumbnail <span class="info" title="Embed the thumbnail in the audio file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--embed-metadata" checked> --embed-metadata <span class="info" title="Embed metadata in the video file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--embed-chapters" checked> --embed-chapters <span class="info" title="Embed chapter markers in the video file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--write-description"> --write-description <span class="info" title="Write the video description to a .description file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--write-info-json"> --write-info-json <span class="info" title="Write video metadata to a .info.json file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--no-clean-info-json"> --no-clean-info-json <span class="info" title="Do not clean the .info.json file.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--write-subs"> --write-subs <span class="info" title="Download subtitles.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--no-simulate"> --no-simulate <span class="info" title="Do not simulate the download.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--no-ignore-no-formats-error"> --no-ignore-no-formats-error <span class="info" title="Do not ignore errors when no formats are available.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--list-formats"> --list-formats <span class="info" title="List all available formats for the video.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--list-subs"> --list-subs <span class="info" title="List all available subtitles for the video.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--progress" checked> --progress <span class="info" title="Show a progress bar.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--console-title"> --console-title <span class="info" title="Display progress in the console title.">i</span></label>
+      <label><input class="flag" type="checkbox" value="--no-keep-fragments"> --no-keep-fragments <span class="info" title="Do not keep downloaded fragments.">i</span></label>
     </div>
   </details>
 
   <details class="card">
     <summary>USB Tools</summary>
-    <div class="row">
-      <button id="btnLsblk" class="secondary">List disks</button>
-      <button id="btnDf" class="secondary">Disk usage</button>
-    </div>
-    <pre id="blkout" class="mono"></pre>
     <div class="grid">
       <div class="field">
-        <label>Mount device</label>
-        <input id="mount_dev" placeholder="/dev/sda1"/>
+        <label>Disks and Usage</label>
+        <div class="row">
+          <button id="btnLsblk" class="secondary">List Disks</button>
+          <button id="btnDf" class="secondary">Disk Usage</button>
+        </div>
+        <pre id="blkout" class="mono"></pre>
       </div>
       <div class="field">
-        <label>to</label>
-        <input id="mount_point" placeholder="/media/usb1"/>
+        <label>Mount/Unmount</label>
+        <div class="row">
+          <input id="mount_dev" placeholder="/dev/sda1"/>
+          <input id="mount_point" placeholder="/media/usb1"/>
+        </div>
+        <div class="row">
+          <button id="btnMount">Mount</button>
+          <button id="btnUmount" class="secondary">Unmount</button>
+        </div>
       </div>
-    </div>
-    <div class="row">
-      <button id="btnMount">Mount</button>
-      <button id="btnUmount" class="secondary">Unmount</button>
     </div>
   </details>
 
@@ -173,6 +168,21 @@
     <small>Warning: runs exactly as typed on the Pi.</small>
   </details>
 </main>
+
+<div id="fileBrowserModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>File Browser</h2>
+      <button id="closeModal" class="close-button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="fileBrowser" class="file-browser"></div>
+    </div>
+    <div class="modal-footer">
+      <button id="selectPath" class="primary">Select Path</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   <span>Server on Raspberry Pi. Browser is UI only.</span>

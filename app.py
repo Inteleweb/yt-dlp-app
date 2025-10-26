@@ -21,7 +21,7 @@ subscribers = set()  # set[queue.Queue]
 history = []  # in-memory log ring
 history_lock = threading.Lock()
 
-percent_regex = re.compile(r"\[download\]\s+(\d+(?:\.\d+)?)%")
+percent_regex = re.compile(r"[download]\s+(\d+(?:\.\d+)?)%")
 
 def broadcast(line: str):
     line = line.rstrip("\n")
@@ -63,9 +63,15 @@ def build_args_from_form(data: dict):
         raise ValueError("Missing URL")
     args = [YTDLP_BIN, "--newline"]
     # Destination path
-    out_tmpl = data.get("output_template", "").strip()
-    if out_tmpl:
-        args += ["-o", out_tmpl]
+    base_dir = data.get("destination_dir", "").strip()
+    out_fn = data.get("output_filename", "").strip()
+    if base_dir and out_fn:
+        args += ["-o", os.path.join(base_dir, out_fn)]
+    elif out_fn:
+        args += ["-o", out_fn]
+    elif base_dir:
+        args += ["-o", os.path.join(base_dir, "%(uploader)s/%(title)s.%(ext)s")]
+
     # Archive
     arch = data.get("archive_path", "").strip()
     if arch:
@@ -116,11 +122,6 @@ def build_args_from_form(data: dict):
     for t in toggles:
         if t in allowed:
             args.append(t)
-    # Destination directory convenience
-    base_dir = data.get("destination_dir", "").strip()
-    if base_dir and not out_tmpl:
-        # Safe default template if none provided
-        args += ["-o", os.path.join(base_dir, "%(uploader)s/%(title)s.%(ext)s")]
     # URL last
     args.append(url)
     return args
@@ -218,18 +219,30 @@ def api_df():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+@app.route("/api/browse")
+def api_browse():
+    path = request.args.get("path", "/")
+    try:
+        if not os.path.isdir(path):
+            return jsonify({"error": "Invalid path"}), 400
+        items = []
+        for item in os.listdir(path):
+            full_path = os.path.join(path, item)
+            items.append({
+                "name": item,
+                "path": full_path,
+                "is_dir": os.path.isdir(full_path)
+            })
+        return jsonify({"path": path, "items": items})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/list_destinations")
 def api_list_destinations():
     found = []
     for base in DEFAULT_DOWNLOAD_DIRS:
         if os.path.isdir(base):
-            for root, dirs, files in os.walk(base):
-                # only list top 2 levels for speed
-                depth = pathlib.Path(root).parts
-                if len(depth) - len(pathlib.Path(base).parts) > 1:
-                    dirs[:] = []
-                    continue
-                found.append(root)
+            found.append(base)
     # unique + sort
     found = sorted(set(found))
     return jsonify({"paths": found})

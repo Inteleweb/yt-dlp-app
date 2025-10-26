@@ -70,7 +70,7 @@ async function startDownload(raw=false) {
     const payload = {
       url,
       destination_dir: $("#destination_dir").value.trim(),
-      output_template: $("#output_template").value.trim(),
+      output_filename: $("#output_filename").value.trim(),
       archive_path: $("#archive_path").value.trim(),
       format_mode: document.querySelector('input[name="fmtmode"]:checked').value,
       custom_format: $("#custom_format").value.trim(),
