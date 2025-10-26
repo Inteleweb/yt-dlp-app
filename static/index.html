@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>yt-dlp Web UI</title>
+<link rel="stylesheet" href="/static/styles.css"/>
+</head>
+<body>
+<header>
+  <h1>yt-dlp Web Interface</h1>
+  <div id="statusBadge" class="badge">Idle</div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Input</h2>
+    <div class="row">
+      <input id="url" type="url" placeholder="Paste video URL…" autocomplete="on"/>
+      <button id="btnStart">Download</button>
+      <button id="btnStop" class="secondary">Cancel</button>
+    </div>
+  </section>
+
+  <details class="card" open>
+    <summary>Core Options</summary>
+    <div class="grid">
+      <div class="field">
+        <label>Destination <span class="info" title="Base folder for downloads. Defaults to a USB mount if present.">i</span></label>
+        <div class="row">
+          <input id="destination_dir" placeholder="/media/usb…"/>
+          <button id="btnBrowsePaths" class="secondary">Suggest</button>
+        </div>
+        <small id="pathsHint"></small>
+      </div>
+
+      <div class="field">
+        <label>Output template <span class="info" title='Example: /media/usb/%(uploader)s/%(title)s.%(ext)s'>i</span></label>
+        <input id="output_template" placeholder='%(uploader)s/%(title)s.%(ext)s'/>
+      </div>
+
+      <div class="field">
+        <label>Archive log <span class="info" title="Avoid re-downloading. Same file path is reused.">i</span></label>
+        <input id="archive_path" placeholder="/mnt/usb/archive_log.txt"/>
+      </div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>Format & Quality</summary>
+    <div class="row">
+      <label><input type="radio" name="fmtmode" value="preset" checked> Preset</label>
+      <label><input type="radio" name="fmtmode" value="custom"> Custom -f</label>
+    </div>
+
+    <div id="presetBox" class="grid">
+      <div class="field">
+        <label>Download type <span class="info" title="Choose audio, video, or both merged.">i</span></label>
+        <select id="dl_kind">
+          <option value="video_audio">Video + Audio</option>
+          <option value="video">Video only</option>
+          <option value="audio">Audio only</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Max height ≤ <span class="info" title="Limit resolution. Leave blank for best.">i</span></label>
+        <input id="max_height" type="number" inputmode="numeric" placeholder="720"/>
+      </div>
+      <div class="example">
+        Example produced: <code id="fmtExample">bestvideo+bestaudio/best</code>
+      </div>
+    </div>
+
+    <div id="customBox" class="field" style="display:none">
+      <label>-f custom <span class="info" title="Directly pass a yt-dlp format selector.">i</span></label>
+      <input id="custom_format" placeholder="bestvideo*[height<=720]+bestaudio/best[height<=720]/best"/>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>Rate & Sleep</summary>
+    <div class="grid">
+      <div class="field">
+        <label>--limit-rate <span class="info" title="e.g. 10000k or 2M">i</span></label>
+        <input id="limit_rate" placeholder="10000k"/>
+      </div>
+      <div class="field">
+        <label>--sleep-interval (s)</label>
+        <input id="sleep_interval" type="number" inputmode="numeric" placeholder="0"/>
+      </div>
+      <div class="field">
+        <label>--max-sleep-interval (s)</label>
+        <input id="max_sleep_interval" type="number" inputmode="numeric" placeholder="0"/>
+      </div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>Flags</summary>
+    <div class="flags">
+      <!-- Error/Resumption -->
+      <label><input class="flag" type="checkbox" value="--no-abort-on-error"> --no-abort-on-error</label>
+      <label><input class="flag" type="checkbox" value="--skip-unavailable-fragments"> --skip-unavailable-fragments</label>
+      <label><input class="flag" type="checkbox" value="--continue"> --continue</label>
+
+      <!-- Filenames -->
+      <label><input class="flag" type="checkbox" value="--restrict-filenames"> --restrict-filenames</label>
+      <label><input class="flag" type="checkbox" value="--windows-filenames"> --windows-filenames</label>
+
+      <!-- Metadata -->
+      <label><input class="flag" type="checkbox" value="--embed-thumbnail"> --embed-thumbnail</label>
+      <label><input class="flag" type="checkbox" value="--embed-metadata"> --embed-metadata</label>
+      <label><input class="flag" type="checkbox" value="--embed-chapters"> --embed-chapters</label>
+      <label><input class="flag" type="checkbox" value="--write-description"> --write-description</label>
+      <label><input class="flag" type="checkbox" value="--write-info-json"> --write-info-json</label>
+      <label><input class="flag" type="checkbox" value="--no-clean-info-json"> --no-clean-info-json</label>
+      <label><input class="flag" type="checkbox" value="--write-subs"> --write-subs</label>
+
+      <!-- Listing/Simulation -->
+      <label><input class="flag" type="checkbox" value="--no-simulate"> --no-simulate</label>
+      <label><input class="flag" type="checkbox" value="--no-ignore-no-formats-error"> --no-ignore-no-formats-error</label>
+      <label><input class="flag" type="checkbox" value="--list-formats"> --list-formats</label>
+      <label><input class="flag" type="checkbox" value="--list-subs"> --list-subs</label>
+
+      <!-- Progress/Title -->
+      <label><input class="flag" type="checkbox" value="--progress" checked> --progress</label>
+      <label><input class="flag" type="checkbox" value="--console-title"> --console-title</label>
+      <label><input class="flag" type="checkbox" value="--no-keep-fragments"> --no-keep-fragments</label>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>USB Tools</summary>
+    <div class="row">
+      <button id="btnLsblk" class="secondary">List disks</button>
+      <button id="btnDf" class="secondary">Disk usage</button>
+    </div>
+    <pre id="blkout" class="mono"></pre>
+    <div class="grid">
+      <div class="field">
+        <label>Mount device</label>
+        <input id="mount_dev" placeholder="/dev/sda1"/>
+      </div>
+      <div class="field">
+        <label>to</label>
+        <input id="mount_point" placeholder="/media/usb1"/>
+      </div>
+    </div>
+    <div class="row">
+      <button id="btnMount">Mount</button>
+      <button id="btnUmount" class="secondary">Unmount</button>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>Logs & Control</summary>
+    <div class="row">
+      <button id="btnFullscreen" class="secondary">Toggle full-screen</button>
+    </div>
+    <div id="progressWrap">
+      <div id="progress"><span id="progressPct" style="width:0%"></span></div>
+      <div id="progressText">0%</div>
+    </div>
+    <pre id="log" class="mono"></pre>
+  </details>
+
+  <details class="card">
+    <summary>Run Custom Command</summary>
+    <div class="row">
+      <input id="rawCmd" placeholder="yt-dlp --help"/>
+      <button id="btnRunRaw">Run</button>
+    </div>
+    <small>Warning: runs exactly as typed on the Pi.</small>
+  </details>
+</main>
+
+<footer>
+  <span>Server on Raspberry Pi. Browser is UI only.</span>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
